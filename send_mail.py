@@ -12,9 +12,27 @@ global sender_name
 global sender_pass
 global recipient
 
+
+"""
+Decorator to simplify the sending of emails in between the training of deep models or classifiers.
+
+@param func: the function object that will be called in between the sending of emails.
+@return: the function object that can be called to send emails and start the training of a specific model
+"""
+def training_mail_manager(func):
+	def wrapper(*args, **kwargs):
+		try:
+			func(*args, **kwargs)
+			print("Sending results")
+			mail(subject="Python script complete", text="Well done. Attached are the results", attachment=args[-1])
+		except Exception as e:
+			print("Crashed: " + str(e))
+			mail(subject="Python script has crashed", text=("Just a heads up. Heres the error message:\n" + str(e)))
+	return wrapper
+
+
 """
 Zips all the files given in the directory parameter, either as a list or a whole directory to be iterated.
-
 @param zipped_name: the name that the zip file is given
 @param directory: the path of the attachment file(s)
 @param is_list: boolean value to determine if attachment is a list of files or a whole directory
@@ -39,7 +57,6 @@ def zip_attachment(zipped_name, directory, is_list):
 
 """
 Send an email from the logged in account to a single recipient.
-
 @param subject: the string to be put as the email subject line
 @param text: the text to be put in the main email content
 @param attachment: optional parameter used to attach 1 or more files to the email. Either a list of files or a whole directory
@@ -89,13 +106,14 @@ def mail(subject, text, attachment=None):
         del file
         os.remove(attachment)
 
+
 #Make the user enter the sender and recipient details when this module is imported
-if __name__ == "send_mail":
+if __name__ == "send_mail_decorator":
     #prompt user for email login
     sender_name = input("Enter senders email adderess: ")
     sender_pass = getpass("Enter senders password: ")
     recipient = input("Enter recipients email address: ")
-    
+	
     #Hide the account details
     clear = lambda: os.system('cls')
     clear()
